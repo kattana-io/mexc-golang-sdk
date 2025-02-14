@@ -17,8 +17,7 @@ func TestHttp(t *testing.T) {
 
 	cl := mexchttp.NewClient("", "", &http.Client{})
 
-	rClient := NewRest(cl)
-
+	rClient, _ := NewRest(ctx, cl)
 	res, _ := rClient.MarketService.Ping(ctx)
 
 	fmt.Println(res)
@@ -36,12 +35,13 @@ func TestWs(t *testing.T) {
 
 	ws := NewWs(wc)
 
-	ws.MarketService.OrderBook(
+	ws.MarketService.OrderBookSubscribe(
+		ctx,
 		[]string{
 			"BTCUSDT",
 			"ETHUSDT",
 		},
-		"5",
+		mexcwsmarket.MinBookDepth,
 		func(book *mexcwsmarket.OrderBook) {
 			fmt.Println("Symbol: ", book.Symbol)
 			fmt.Println("ASKS: ", book.Data.Asks)

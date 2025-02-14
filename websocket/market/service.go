@@ -9,5 +9,7 @@ type Service struct {
 }
 
 func New(client *mexcws.MEXCWebSocket) *Service {
-	return &Service{client: client}
+	return &Service{
+		client: client,
+	}
 }
