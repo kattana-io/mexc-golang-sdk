@@ -1,4 +1,4 @@
-package mexcws
+package connection
 
 type MEXCWebSocketConnections struct {
 	data []*MEXCWebSocketConnection

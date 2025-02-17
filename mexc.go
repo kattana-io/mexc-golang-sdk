@@ -4,8 +4,8 @@ import (
 	"context"
 	mexchttp "github.com/kattana-io/mexc-golang-sdk/http"
 	mexchttpmarket "github.com/kattana-io/mexc-golang-sdk/http/market"
-	mexcws "github.com/kattana-io/mexc-golang-sdk/websocket"
-	mexcwsmarket "github.com/kattana-io/mexc-golang-sdk/websocket/market"
+	"github.com/kattana-io/mexc-golang-sdk/websocket"
+	"github.com/kattana-io/mexc-golang-sdk/websocket/market"
 )
 
 type Rest struct {

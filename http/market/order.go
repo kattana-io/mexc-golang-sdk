@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 )
 
-func (s *Service) CreateOrder(ctx context.Context, req *CreateOrderRequest) (*OrderResponse, error) {
+// CreateOrder https://mexcdevelop.github.io/apidocs/spot_v3_en/#new-order
+func (s *Service) CreateOrder(ctx context.Context, req *CreateOrderRequest) (*CreateOrderResponse, error) {
 	endpoint := "/api/v3/order"
 
 	params := make(map[string]string)
@@ -32,13 +34,12 @@ func (s *Service) CreateOrder(ctx context.Context, req *CreateOrderRequest) (*Or
 		params["recvWindow"] = fmt.Sprintf("%d", *req.RecvWindow)
 	}
 
-	res, err := s.client.SendRequest(ctx, "POST", endpoint, params)
+	res, err := s.client.SendRequest(ctx, http.MethodPost, endpoint, params)
 	if err != nil {
-		fmt.Printf("Error: %s\n", err)
 		return nil, err
 	}
 
-	var orderResponse OrderResponse
+	var orderResponse CreateOrderResponse
 	err = json.Unmarshal(res, &orderResponse)
 	if err != nil {
 		return nil, err
@@ -58,26 +59,13 @@ type CreateOrderRequest struct {
 	RecvWindow       *int64  `json:"recvWindow,omitempty"`
 }
 
-type Side string
-type Type string
-
-const (
-	SideBuy  Side = "BUY"
-	SideSell Side = "SELL"
-)
-
-const (
-	TypeLimit  Type = "LIMIT"
-	TypeMarket Type = "MARKET"
-)
-
-type OrderResponse struct {
+type CreateOrderResponse struct {
 	Symbol       string `json:"symbol"`
 	OrderId      string `json:"orderId"`
 	OrderListId  int    `json:"orderListId"`
 	Price        string `json:"price"`
 	OrigQty      string `json:"origQty"`
-	Type         string `json:"type"`
-	Side         string `json:"side"`
+	Type         Type   `json:"type"`
+	Side         Side   `json:"side"`
 	TransactTime int64  `json:"transactTime"`
 }

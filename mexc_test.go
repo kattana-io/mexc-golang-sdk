@@ -3,13 +3,13 @@ package mexc
 import (
 	"context"
 	"fmt"
+	"github.com/kattana-io/mexc-golang-sdk/websocket"
+	"github.com/kattana-io/mexc-golang-sdk/websocket/market"
 	"net/http"
 	"testing"
 	"time"
 
 	mexchttp "github.com/kattana-io/mexc-golang-sdk/http"
-	mexcws "github.com/kattana-io/mexc-golang-sdk/websocket"
-	mexcwsmarket "github.com/kattana-io/mexc-golang-sdk/websocket/market"
 )
 
 func TestHttp(t *testing.T) {
@@ -31,7 +31,7 @@ func TestWs(t *testing.T) {
 		fmt.Println("Error: ", err)
 	})
 
-	wc.Connect(ctx)
+	wc.Connect(ctx, nil)
 
 	ws := NewWs(wc)
 
