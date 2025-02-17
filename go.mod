@@ -1,4 +1,4 @@
-module github.com/bogdankorobka/mexc-golang-sdk
+module github.com/kattana-io/mexc-golang-sdk
 
 go 1.22.3
 

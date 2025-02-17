@@ -2,7 +2,7 @@ package mexcwsmarket
 
 import (
 	"context"
-	mexcws "github.com/bogdankorobka/mexc-golang-sdk/websocket"
+	mexcws "github.com/kattana-io/mexc-golang-sdk/websocket"
 )
 
 func (s *Service) Ping(ctx context.Context) error {

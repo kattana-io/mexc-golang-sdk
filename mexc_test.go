@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	mexchttp "github.com/bogdankorobka/mexc-golang-sdk/http"
-	mexcws "github.com/bogdankorobka/mexc-golang-sdk/websocket"
-	mexcwsmarket "github.com/bogdankorobka/mexc-golang-sdk/websocket/market"
+	mexchttp "github.com/kattana-io/mexc-golang-sdk/http"
+	mexcws "github.com/kattana-io/mexc-golang-sdk/websocket"
+	mexcwsmarket "github.com/kattana-io/mexc-golang-sdk/websocket/market"
 )
 
 func TestHttp(t *testing.T) {

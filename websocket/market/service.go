@@ -1,7 +1,7 @@
 package mexcwsmarket
 
 import (
-	mexcws "github.com/bogdankorobka/mexc-golang-sdk/websocket"
+	mexcws "github.com/kattana-io/mexc-golang-sdk/websocket"
 )
 
 type Service struct {
