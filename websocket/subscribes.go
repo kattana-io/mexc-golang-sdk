@@ -37,3 +37,20 @@ func (s *Subscribes) Load(req string) (OnReceive, bool) {
 
 	return v, ok
 }
+
+func (s *Subscribes) Len() int {
+	s.RLock()
+	defer s.RUnlock()
+	return len(s.m)
+}
+
+func (s *Subscribes) GetAllChannels() []string {
+	s.RLock()
+	defer s.RUnlock()
+
+	channels := make([]string, 0)
+	for ch := range s.m {
+		channels = append(channels, ch)
+	}
+	return channels
+}

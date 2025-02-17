@@ -1,10 +1,19 @@
 package mexcwsmarket
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+)
 
-	mexcws "github.com/bogdankorobka/mexc-golang-sdk/websocket"
+type BookDepth int
+
+const (
+	MinBookDepth BookDepth = 5
+	MidBookDepth BookDepth = 10
+	MaxBookDepth BookDepth = 20
+
+	PartialBooksDepthRequestPattern = "spot@public.limit.depth.v3.api@%s@%d"
 )
 
 type OrderBook struct {
@@ -25,30 +34,36 @@ type OrderBook struct {
 	Timestamp int64  `json:"t"`
 }
 
-func (s *Service) OrderBook(symbols []string, level string, listener func(*OrderBook)) error {
+func (s *Service) OrderBookSubscribe(ctx context.Context, symbols []string, level BookDepth, callback func(*OrderBook)) error {
 	lstnr := func(message string) {
 		var book OrderBook
 
 		err := json.Unmarshal([]byte(message), &book)
 		if err != nil {
-			fmt.Println("OrderBook listener unmarshal error:", err)
+			fmt.Println("OrderBook callback unmarshal error:", err)
 			return
 		}
 
-		listener(&book)
-	}
-
-	req := &mexcws.WsReq{
-		Method: "SUBSCRIPTION",
-		Params: []string{},
+		callback(&book)
 	}
 
 	for _, symbol := range symbols {
-		channel := fmt.Sprintf("spot@public.limit.depth.v3.api@%s@%s", symbol, level)
-
-		req.Params = append(req.Params, channel)
-		s.client.Subs.Add(channel, lstnr)
+		channel := fmt.Sprintf(PartialBooksDepthRequestPattern, symbol, level)
+		if err := s.client.Subscribe(ctx, channel, lstnr); err != nil {
+			return err
+		}
 	}
 
-	return s.client.Send(req)
+	return nil
+}
+
+func (s *Service) OrderBookUnsubscribe(symbols []string, level BookDepth) error {
+	for _, symbol := range symbols {
+		channel := fmt.Sprintf(PartialBooksDepthRequestPattern, symbol, level)
+		if err := s.client.Unsubscribe(channel); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
