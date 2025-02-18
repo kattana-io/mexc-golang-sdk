@@ -1,4 +1,4 @@
-package mexcws
+package mexcwstypes
 
 type OnReceive func(message string)
 type OnError func(err error)

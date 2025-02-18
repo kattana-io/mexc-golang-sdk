@@ -49,7 +49,7 @@ func (s *Service) OrderBookSubscribe(ctx context.Context, symbols []string, leve
 
 	for _, symbol := range symbols {
 		channel := fmt.Sprintf(PartialBooksDepthRequestPattern, symbol, level)
-		if err := s.client.Subscribe(ctx, channel, lstnr); err != nil {
+		if err := s.client.Subscribe(ctx, channel, nil, lstnr); err != nil {
 			return err
 		}
 	}

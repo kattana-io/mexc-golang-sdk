@@ -1,21 +1,22 @@
-package mexcws
+package connection
 
 import (
+	"github.com/kattana-io/mexc-golang-sdk/websocket/types"
 	"sync"
 )
 
 type Subscribes struct {
-	m map[string]OnReceive
+	m map[string]mexcwstypes.OnReceive
 	sync.RWMutex
 }
 
 func NewSubs() *Subscribes {
 	return &Subscribes{
-		m: map[string]OnReceive{},
+		m: map[string]mexcwstypes.OnReceive{},
 	}
 }
 
-func (s *Subscribes) Add(req string, listener OnReceive) {
+func (s *Subscribes) Add(req string, listener mexcwstypes.OnReceive) {
 	s.Lock()
 	defer s.Unlock()
 
@@ -29,7 +30,7 @@ func (s *Subscribes) Remove(req string) {
 	delete(s.m, req)
 }
 
-func (s *Subscribes) Load(req string) (OnReceive, bool) {
+func (s *Subscribes) Load(req string) (mexcwstypes.OnReceive, bool) {
 	s.RLock()
 	defer s.RUnlock()
 

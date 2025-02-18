@@ -3,15 +3,15 @@ package mexchttpmarket
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"net/http"
 )
 
+// Time https://mexcdevelop.github.io/apidocs/spot_v3_en/#check-server-time
 func (s *Service) Time(ctx context.Context) (*TimeResponse, error) {
 	endpoint := "/api/v3/time"
 
-	res, err := s.client.SendRequest(ctx, "GET", endpoint, nil)
+	res, err := s.client.SendRequest(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
-		fmt.Printf("Error: %s\n", err)
 		return nil, err
 	}
 

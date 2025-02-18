@@ -1,4 +1,4 @@
-package mexcws
+package connection
 
 import (
 	"context"
@@ -6,21 +6,26 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"github.com/kattana-io/mexc-golang-sdk/websocket/types"
 	"log"
 	"sync"
 	"time"
 )
 
+const (
+	MaxMEXCWebSocketSubscriptions = 30
+)
+
 type MEXCWebSocketConnection struct {
 	Subs          *Subscribes
 	Conn          *websocket.Conn
-	ErrorListener OnError
+	ErrorListener mexcwstypes.OnError
 	sendMutex     *sync.Mutex
 	subMtx        *sync.Mutex
 	url           string
 }
 
-func NewMEXCWebSocketConnection(url string, errorListener OnError) *MEXCWebSocketConnection {
+func NewMEXCWebSocketConnection(url string, errorListener mexcwstypes.OnError) *MEXCWebSocketConnection {
 	return &MEXCWebSocketConnection{
 		sendMutex:     &sync.Mutex{},
 		subMtx:        &sync.Mutex{},
@@ -45,7 +50,7 @@ func (m *MEXCWebSocketConnection) Connect(ctx context.Context) error {
 	return nil
 }
 
-func (m *MEXCWebSocketConnection) Send(message *WsReq) error {
+func (m *MEXCWebSocketConnection) Send(message *mexcwstypes.WsReq) error {
 	if m.Conn == nil {
 		return fmt.Errorf("no available connection")
 	}
@@ -56,7 +61,7 @@ func (m *MEXCWebSocketConnection) Send(message *WsReq) error {
 	return m.Conn.WriteJSON(message)
 }
 
-func (m *MEXCWebSocketConnection) Subscribe(channel string, callback OnReceive) error {
+func (m *MEXCWebSocketConnection) Subscribe(channel string, callback mexcwstypes.OnReceive) error {
 	m.subMtx.Lock()
 	defer m.subMtx.Unlock()
 
@@ -64,7 +69,7 @@ func (m *MEXCWebSocketConnection) Subscribe(channel string, callback OnReceive) 
 		return errors.New("max subscriptions exceeded")
 	}
 
-	err := m.Send(&WsReq{
+	err := m.Send(&mexcwstypes.WsReq{
 		Method: "SUBSCRIPTION",
 		Params: []string{channel},
 	})
@@ -81,7 +86,7 @@ func (m *MEXCWebSocketConnection) Unsubscribe(channel string) error {
 	defer m.subMtx.Unlock()
 
 	m.Subs.Remove(channel)
-	return m.Send(&WsReq{
+	return m.Send(&mexcwstypes.WsReq{
 		Method: "UNSUBSCRIPTION",
 		Params: []string{channel},
 	})
@@ -99,7 +104,7 @@ func (m *MEXCWebSocketConnection) keepAlive(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-pingTicker.C:
-			err := m.Send(&WsReq{Method: "PING"})
+			err := m.Send(&mexcwstypes.WsReq{Method: "PING"})
 			if err != nil {
 				m.ErrorListener(err)
 			}
@@ -170,7 +175,7 @@ func (m *MEXCWebSocketConnection) reconnect(ctx context.Context) error {
 	oldConn := m.Conn
 	m.Conn = newConn
 
-	req := &WsReq{
+	req := &mexcwstypes.WsReq{
 		Method: "SUBSCRIPTION",
 		Params: m.Subs.GetAllChannels(),
 	}
@@ -181,7 +186,7 @@ func (m *MEXCWebSocketConnection) reconnect(ctx context.Context) error {
 	return oldConn.Close()
 }
 
-func (m *MEXCWebSocketConnection) getListener(argJson interface{}) OnReceive {
+func (m *MEXCWebSocketConnection) getListener(argJson interface{}) mexcwstypes.OnReceive {
 	mapData := argJson.(map[string]interface{})
 
 	v, _ := m.Subs.Load(fmt.Sprintf("%s", mapData["c"]))

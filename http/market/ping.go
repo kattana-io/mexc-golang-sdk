@@ -2,15 +2,15 @@ package mexchttpmarket
 
 import (
 	"context"
-	"fmt"
+	"net/http"
 )
 
+// Ping https://mexcdevelop.github.io/apidocs/spot_v3_en/#test-connectivity
 func (s *Service) Ping(ctx context.Context) (string, error) {
 	endpoint := "/api/v3/ping"
 
-	res, err := s.client.SendRequest(ctx, "GET", endpoint, nil)
+	res, err := s.client.SendRequest(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
-		fmt.Printf("Error: %s\n", err)
 		return "", err
 	}
 

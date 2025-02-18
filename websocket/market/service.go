@@ -1,7 +1,7 @@
 package mexcwsmarket
 
 import (
-	mexcws "github.com/kattana-io/mexc-golang-sdk/websocket"
+	"github.com/kattana-io/mexc-golang-sdk/websocket"
 )
 
 type Service struct {
