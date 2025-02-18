@@ -6,6 +6,7 @@ import (
 	"fmt"
 	mexchttp "github.com/kattana-io/mexc-golang-sdk/http"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -27,7 +28,9 @@ func New(client *mexchttp.Client) *Service {
 func (s *Service) CreateListenKey(ctx context.Context) (string, error) {
 	endpoint := "/api/v3/userDataStream"
 
-	res, err := s.client.SendRequest(ctx, http.MethodPost, endpoint, nil)
+	res, err := s.client.SendRequest(ctx, http.MethodPost, endpoint, map[string]string{
+		"timestamp": strconv.FormatInt(time.Now().UnixMilli(), 10),
+	})
 	if err != nil {
 		return "", err
 	}
@@ -48,6 +51,7 @@ func (s *Service) KeepAliveKey(ctx context.Context, key string) error {
 
 	params := map[string]string{
 		"listenKey": key,
+		"timestamp": strconv.FormatInt(time.Now().UnixMilli(), 10),
 	}
 	_, err := s.client.SendRequest(ctx, http.MethodPost, endpoint, params)
 	return err

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	mexcwstypes "github.com/kattana-io/mexc-golang-sdk/websocket/types"
+	"github.com/shopspring/decimal"
 )
 
 const (
@@ -80,21 +81,21 @@ const (
 type OrderEvent struct {
 	Channel string `json:"c"`
 	Data    struct {
-		RemainAmount       float64 `json:"A"`
-		CreateTime         int64   `json:"O"`
-		Side               Side    `json:"S"`
-		RemainQuantity     float64 `json:"V"`
-		Amount             float64 `json:"a"`
-		ClientOrderID      string  `json:"c"`
-		OrderID            string  `json:"i"`
-		IsMaker            bool    `json:"m"`
-		Type               Type    `json:"o"`
-		Price              float64 `json:"p"`
-		Status             Status  `json:"s"`
-		Quantity           float64 `json:"v"`
-		AveragePrice       float64 `json:"ap"`
-		CumulativeQuantity float64 `json:"cv"`
-		CumulativeAmount   float64 `json:"ca"`
+		RemainAmount       decimal.Decimal `json:"A"`
+		CreateTime         int64           `json:"O"`
+		Side               Side            `json:"S"`
+		RemainQuantity     decimal.Decimal `json:"V"`
+		Amount             decimal.Decimal `json:"a"`
+		ClientOrderID      string          `json:"c"`
+		OrderID            string          `json:"i"`
+		IsMaker            byte            `json:"m"`
+		Type               Type            `json:"o"`
+		Price              decimal.Decimal `json:"p"`
+		Status             Status          `json:"s"`
+		Quantity           decimal.Decimal `json:"v"`
+		AveragePrice       decimal.Decimal `json:"ap"`
+		CumulativeQuantity decimal.Decimal `json:"cv"`
+		CumulativeAmount   decimal.Decimal `json:"ca"`
 	} `json:"d"`
 	Symbol    string `json:"s"`
 	Timestamp int64  `json:"t"`

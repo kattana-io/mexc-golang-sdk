@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/shopspring/decimal"
 	"net/http"
 )
 
@@ -60,12 +61,12 @@ type CreateOrderRequest struct {
 }
 
 type CreateOrderResponse struct {
-	Symbol       string `json:"symbol"`
-	OrderId      string `json:"orderId"`
-	OrderListId  int    `json:"orderListId"`
-	Price        string `json:"price"`
-	OrigQty      string `json:"origQty"`
-	Type         Type   `json:"type"`
-	Side         Side   `json:"side"`
-	TransactTime int64  `json:"transactTime"`
+	Symbol       string          `json:"symbol"`
+	OrderId      string          `json:"orderId"`
+	OrderListId  int             `json:"orderListId"`
+	Price        decimal.Decimal `json:"price"`
+	OrigQty      decimal.Decimal `json:"origQty"`
+	Type         Type            `json:"type"`
+	Side         Side            `json:"side"`
+	TransactTime int64           `json:"transactTime"`
 }

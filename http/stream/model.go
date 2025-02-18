@@ -1,5 +1,5 @@
 package mexchttpstream
 
 type ListenKeyResponse struct {
-	Key string `json:"key"`
+	Key string `json:"listenKey"`
 }

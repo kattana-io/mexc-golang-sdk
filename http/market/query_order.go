@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/shopspring/decimal"
 	"net/http"
 )
 
@@ -48,21 +49,21 @@ type GetOrderRequest struct {
 }
 
 type GetOrderResponse struct {
-	Symbol              string `json:"symbol"`
-	OrderId             string `json:"orderId"`
-	OrigClientOrderId   string `json:"origClientOrderId,omitempty"`
-	ClientOrderID       string `json:"clientOrderId"`
-	Price               string `json:"price"`
-	OrigQty             string `json:"origQty"`
-	ExecutedQty         string `json:"executedQty"`
-	CummulativeQuoteQty string `json:"cummulativeQuoteQty"`
-	Status              Status `json:"status"`
-	TimeInForce         string `json:"timeInForce"`
-	Type                Type   `json:"type"`
-	Side                Side   `json:"side"`
-	StopPrice           string `json:"stopPrice"`
-	CreateTime          int64  `json:"time"`
-	UpdateTime          int64  `json:"updateTime"`
-	IsWorking           bool   `json:"isWorking"`
-	OrigQuoteOrderQty   string `json:"origQuoteOrderQty"`
+	Symbol              string          `json:"symbol"`
+	OrderId             string          `json:"orderId"`
+	OrigClientOrderId   string          `json:"origClientOrderId,omitempty"`
+	ClientOrderID       string          `json:"clientOrderId"`
+	Price               decimal.Decimal `json:"price"`
+	OrigQty             decimal.Decimal `json:"origQty"`
+	ExecutedQty         decimal.Decimal `json:"executedQty"`
+	CummulativeQuoteQty decimal.Decimal `json:"cummulativeQuoteQty"`
+	Status              Status          `json:"status"`
+	TimeInForce         string          `json:"timeInForce"`
+	Type                Type            `json:"type"`
+	Side                Side            `json:"side"`
+	StopPrice           decimal.Decimal `json:"stopPrice"`
+	CreateTime          int64           `json:"time"`
+	UpdateTime          int64           `json:"updateTime"`
+	IsWorking           bool            `json:"isWorking"`
+	OrigQuoteOrderQty   decimal.Decimal `json:"origQuoteOrderQty"`
 }
