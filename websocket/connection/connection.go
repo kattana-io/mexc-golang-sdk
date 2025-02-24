@@ -23,6 +23,7 @@ type MEXCWebSocketConnection struct {
 	sendMutex     *sync.Mutex
 	subMtx        *sync.Mutex
 	url           string
+	readCancel    context.CancelFunc
 }
 
 func NewMEXCWebSocketConnection(url string, errorListener mexcwstypes.OnError) *MEXCWebSocketConnection {
@@ -37,6 +38,11 @@ func NewMEXCWebSocketConnection(url string, errorListener mexcwstypes.OnError) *
 
 // Connect establishes a WebSocket connection to the MEXC exchange
 func (m *MEXCWebSocketConnection) Connect(ctx context.Context) error {
+	if m.Conn != nil {
+		// already connected
+		return nil
+	}
+
 	var err error
 
 	m.Conn, _, err = websocket.DefaultDialer.DialContext(ctx, m.url, nil)
@@ -44,9 +50,7 @@ func (m *MEXCWebSocketConnection) Connect(ctx context.Context) error {
 		return err
 	}
 
-	go m.keepAlive(ctx)
-	go m.readLoop(ctx)
-
+	m.run(ctx)
 	return nil
 }
 
@@ -69,15 +73,16 @@ func (m *MEXCWebSocketConnection) Subscribe(channel string, callback mexcwstypes
 		return errors.New("max subscriptions exceeded")
 	}
 
+	m.Subs.Add(channel, callback)
 	err := m.Send(&mexcwstypes.WsReq{
 		Method: "SUBSCRIPTION",
 		Params: []string{channel},
 	})
 	if err != nil {
+		m.Subs.Remove(channel)
 		return err
 	}
 
-	m.Subs.Add(channel, callback)
 	return nil
 }
 
@@ -92,12 +97,30 @@ func (m *MEXCWebSocketConnection) Unsubscribe(channel string) error {
 	})
 }
 
+func (m *MEXCWebSocketConnection) run(ctx context.Context) {
+	readCtx, cancel := context.WithCancel(ctx)
+	m.readCancel = cancel
+
+	go m.keepAlive(readCtx)
+	go m.readLoop(readCtx)
+	go m.reconnectLoop(ctx)
+}
+
+func (m *MEXCWebSocketConnection) reconnectLoop(ctx context.Context) {
+	select {
+	case <-ctx.Done():
+		return
+	case <-time.After(23 * time.Hour):
+		if err := m.reconnect(ctx); err != nil {
+			m.ErrorListener(fmt.Errorf("reconnect error: %v", err))
+		}
+	}
+}
+
 // keepAlive sends a ping message to the server every 30 seconds to keep the connection alive
 func (m *MEXCWebSocketConnection) keepAlive(ctx context.Context) {
 	pingTicker := time.NewTicker(30 * time.Second)
-	reconnectTicker := time.NewTicker(23 * time.Hour) // mexc terminate connection after 24h
 	defer pingTicker.Stop()
-	defer reconnectTicker.Stop()
 
 	for {
 		select {
@@ -106,11 +129,7 @@ func (m *MEXCWebSocketConnection) keepAlive(ctx context.Context) {
 		case <-pingTicker.C:
 			err := m.Send(&mexcwstypes.WsReq{Method: "PING"})
 			if err != nil {
-				m.ErrorListener(err)
-			}
-		case <-reconnectTicker.C:
-			if err := m.reconnect(ctx); err != nil {
-				m.ErrorListener(err)
+				m.ErrorListener(fmt.Errorf("ping error: %v", err))
 			}
 		}
 	}
@@ -135,8 +154,7 @@ func (m *MEXCWebSocketConnection) handleLoop() {
 
 	_, buf, err := m.Conn.ReadMessage()
 	if err != nil {
-		m.ErrorListener(err)
-
+		m.ErrorListener(fmt.Errorf("read error: %v", err))
 		return
 	}
 
@@ -145,7 +163,7 @@ func (m *MEXCWebSocketConnection) handleLoop() {
 	var update map[string]interface{}
 	err = json.Unmarshal(buf, &update)
 	if err != nil {
-		m.ErrorListener(err)
+		m.ErrorListener(fmt.Errorf("unmarshal error: %v", err))
 
 		return
 	}
@@ -157,7 +175,6 @@ func (m *MEXCWebSocketConnection) handleLoop() {
 	listener := m.getListener(update)
 	if listener != nil {
 		listener(message)
-
 		return
 	}
 
@@ -170,10 +187,15 @@ func (m *MEXCWebSocketConnection) reconnect(ctx context.Context) error {
 
 	newConn, _, err := websocket.DefaultDialer.DialContext(ctx, m.url, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("connect error: %v", err)
 	}
+
+	// stop reading from old connection
+	m.readCancel()
 	oldConn := m.Conn
 	m.Conn = newConn
+	// run new connection read loop
+	m.run(ctx)
 
 	req := &mexcwstypes.WsReq{
 		Method: "SUBSCRIPTION",
