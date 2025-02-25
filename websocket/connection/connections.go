@@ -15,9 +15,7 @@ func (c *MEXCWebSocketConnections) Len() int {
 }
 
 func (c *MEXCWebSocketConnections) Less(i, j int) bool {
-	// We want Pop to give us the connection with the most free slots,
-	// so we use greater than here.
-	return c.data[i].Subs.Len() > c.data[j].Subs.Len()
+	return c.data[i].Subs.Len() < c.data[j].Subs.Len()
 }
 
 func (c *MEXCWebSocketConnections) Swap(i, j int) {

@@ -24,6 +24,7 @@ type MEXCWebSocketConnection struct {
 	subMtx        *sync.Mutex
 	url           string
 	readCancel    context.CancelFunc
+	ctx           context.Context
 }
 
 func NewMEXCWebSocketConnection(url string, errorListener mexcwstypes.OnError) *MEXCWebSocketConnection {
@@ -50,6 +51,7 @@ func (m *MEXCWebSocketConnection) Connect(ctx context.Context) error {
 		return err
 	}
 
+	m.ctx = ctx
 	m.run(ctx)
 	return nil
 }
@@ -103,7 +105,7 @@ func (m *MEXCWebSocketConnection) run(ctx context.Context) {
 
 	go m.keepAlive(readCtx)
 	go m.readLoop(readCtx)
-	go m.reconnectLoop(ctx)
+	go m.reconnectLoop(readCtx)
 }
 
 func (m *MEXCWebSocketConnection) reconnectLoop(ctx context.Context) {
@@ -111,8 +113,8 @@ func (m *MEXCWebSocketConnection) reconnectLoop(ctx context.Context) {
 	case <-ctx.Done():
 		return
 	case <-time.After(23 * time.Hour):
-		if err := m.reconnect(ctx); err != nil {
-			m.ErrorListener(fmt.Errorf("reconnect error: %v", err))
+		if err := m.reconnect(); err != nil {
+			m.ErrorListener(fmt.Errorf("schedulled reconnect error: %v", err))
 		}
 	}
 }
@@ -154,7 +156,11 @@ func (m *MEXCWebSocketConnection) handleLoop() {
 
 	_, buf, err := m.Conn.ReadMessage()
 	if err != nil {
-		m.ErrorListener(fmt.Errorf("read error: %v", err))
+		if rErr := m.reconnect(); rErr != nil {
+			m.ErrorListener(fmt.Errorf("reconnect error: %v", err))
+		}
+
+		log.Printf("readLoop error: %v", err)
 		return
 	}
 
@@ -181,31 +187,35 @@ func (m *MEXCWebSocketConnection) handleLoop() {
 	log.Println(fmt.Sprintf("Unhandled: %v", update))
 }
 
-func (m *MEXCWebSocketConnection) reconnect(ctx context.Context) error {
+func (m *MEXCWebSocketConnection) reconnect() error {
+	// stop reading from old connection
+	m.readCancel()
+
 	m.subMtx.Lock()
 	defer m.subMtx.Unlock()
 
-	newConn, _, err := websocket.DefaultDialer.DialContext(ctx, m.url, nil)
+	newConn, _, err := websocket.DefaultDialer.DialContext(m.ctx, m.url, nil)
 	if err != nil {
 		return fmt.Errorf("connect error: %v", err)
 	}
 
-	// stop reading from old connection
-	m.readCancel()
 	oldConn := m.Conn
 	m.Conn = newConn
 	// run new connection read loop
-	m.run(ctx)
+	m.run(m.ctx)
 
 	req := &mexcwstypes.WsReq{
 		Method: "SUBSCRIPTION",
 		Params: m.Subs.GetAllChannels(),
 	}
 	if err = m.Send(req); err != nil {
-		return err
+		return fmt.Errorf("resubscription error: %v", err)
 	}
 
-	return oldConn.Close()
+	if err = oldConn.Close(); err != nil {
+		log.Printf("closing old websocket connection error: %v", err)
+	}
+	return nil
 }
 
 func (m *MEXCWebSocketConnection) getListener(argJson interface{}) mexcwstypes.OnReceive {
