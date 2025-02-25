@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/kattana-io/mexc-golang-sdk/websocket/types"
 	"log"
@@ -25,6 +26,7 @@ type MEXCWebSocketConnection struct {
 	url           string
 	readCancel    context.CancelFunc
 	ctx           context.Context
+	id            string
 }
 
 func NewMEXCWebSocketConnection(url string, errorListener mexcwstypes.OnError) *MEXCWebSocketConnection {
@@ -34,6 +36,7 @@ func NewMEXCWebSocketConnection(url string, errorListener mexcwstypes.OnError) *
 		url:           url,
 		ErrorListener: errorListener,
 		Subs:          NewSubs(),
+		id:            uuid.NewString(),
 	}
 }
 
@@ -58,7 +61,7 @@ func (m *MEXCWebSocketConnection) Connect(ctx context.Context) error {
 
 func (m *MEXCWebSocketConnection) Send(message *mexcwstypes.WsReq) error {
 	if m.Conn == nil {
-		return fmt.Errorf("no available connection")
+		return fmt.Errorf("no available connection id: %s", m.id)
 	}
 
 	m.sendMutex.Lock()
@@ -113,6 +116,7 @@ func (m *MEXCWebSocketConnection) reconnectLoop(ctx context.Context) {
 	case <-ctx.Done():
 		return
 	case <-time.After(23 * time.Hour):
+		log.Printf("run scheduled reconnect. id: %s", m.id)
 		if err := m.reconnect(); err != nil {
 			m.ErrorListener(fmt.Errorf("schedulled reconnect error: %v", err))
 		}
@@ -156,11 +160,16 @@ func (m *MEXCWebSocketConnection) handleLoop() {
 
 	_, buf, err := m.Conn.ReadMessage()
 	if err != nil {
+		if websocket.IsCloseError(err, websocket.CloseNormalClosure) {
+			m.ErrorListener(fmt.Errorf("connection closed: %v", err))
+			return
+		}
+
 		if rErr := m.reconnect(); rErr != nil {
 			m.ErrorListener(fmt.Errorf("reconnect error: %v", err))
 		}
 
-		log.Printf("readLoop error: %v", err)
+		log.Printf("readLoop error for id %s: %v", m.id, err)
 		return
 	}
 
@@ -178,13 +187,18 @@ func (m *MEXCWebSocketConnection) handleLoop() {
 		return
 	}
 
-	listener := m.getListener(update)
+	if m.getListener(fmt.Sprintf("%s", update["msg"])) != nil {
+		// successful subscribe response
+		return
+	}
+
+	listener := m.getListener(fmt.Sprintf("%s", update["c"]))
 	if listener != nil {
 		listener(message)
 		return
 	}
 
-	log.Println(fmt.Sprintf("Unhandled: %v", update))
+	log.Println(fmt.Sprintf("Unhandled for id %s: %v", m.id, update))
 }
 
 func (m *MEXCWebSocketConnection) reconnect() error {
@@ -199,32 +213,37 @@ func (m *MEXCWebSocketConnection) reconnect() error {
 		return fmt.Errorf("connect error: %v", err)
 	}
 
-	oldConn := m.Conn
+	if err = m.Disconnect(); err != nil {
+		log.Printf("closing old websocket connection error for id %s: %v", m.id, err)
+	}
+
 	m.Conn = newConn
 	// run new connection read loop
 	m.run(m.ctx)
 
-	req := &mexcwstypes.WsReq{
-		Method: "SUBSCRIPTION",
-		Params: m.Subs.GetAllChannels(),
-	}
-	if err = m.Send(req); err != nil {
-		return fmt.Errorf("resubscription error: %v", err)
+	for _, ch := range m.Subs.GetAllChannels() {
+		req := &mexcwstypes.WsReq{
+			Method: "SUBSCRIPTION",
+			Params: []string{ch},
+		}
+		if err = m.Send(req); err != nil {
+			return fmt.Errorf("resubscription error for channel [%s]: %v", ch, err)
+		}
 	}
 
-	if err = oldConn.Close(); err != nil {
-		log.Printf("closing old websocket connection error: %v", err)
-	}
+	log.Printf("reconnect successful %s", m.id)
 	return nil
 }
 
-func (m *MEXCWebSocketConnection) getListener(argJson interface{}) mexcwstypes.OnReceive {
-	mapData := argJson.(map[string]interface{})
-
-	v, _ := m.Subs.Load(fmt.Sprintf("%s", mapData["c"]))
+func (m *MEXCWebSocketConnection) getListener(channel string) mexcwstypes.OnReceive {
+	v, _ := m.Subs.Load(channel)
 	return v
 }
 
 func (m *MEXCWebSocketConnection) Disconnect() error {
+	if err := m.Conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""),
+		time.Now().Add(60*time.Second)); err != nil && !errors.Is(err, websocket.ErrCloseSent) {
+		return err
+	}
 	return m.Conn.Close()
 }
