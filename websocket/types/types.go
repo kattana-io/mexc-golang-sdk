@@ -1,7 +1,7 @@
 package mexcwstypes
 
 type OnReceive func(message string)
-type OnError func(err error)
+type OnError func(connClosed bool, err error)
 
 type WsReq struct {
 	Method string   `json:"method"`

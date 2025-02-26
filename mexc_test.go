@@ -12,7 +12,7 @@ import (
 	mexchttp "github.com/kattana-io/mexc-golang-sdk/http"
 )
 
-func TestHttp(t *testing.T) {
+func TestHttp(_ *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	cl := mexchttp.NewClient("", "", &http.Client{})
@@ -24,10 +24,10 @@ func TestHttp(t *testing.T) {
 	cancel()
 }
 
-func TestWs(t *testing.T) {
+func TestWs(_ *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	wc := mexcws.NewMEXCWebSocket(func(err error) {
+	wc := mexcws.NewMEXCWebSocket(func(_ bool, err error) {
 		fmt.Println("Error: ", err)
 	})
 

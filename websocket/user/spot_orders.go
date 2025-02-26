@@ -22,7 +22,7 @@ func (s *Service) OrdersSubscribe(ctx context.Context, callback func(*OrderEvent
 	go func(ctx context.Context, listenKey string) {
 		kErr := s.httpStream.RunKeyKeepAlive(ctx, listenKey)
 		if kErr != nil {
-			errCallback(err)
+			errCallback(true, err)
 		}
 	}(ctx, listenKey)
 
@@ -30,7 +30,7 @@ func (s *Service) OrdersSubscribe(ctx context.Context, callback func(*OrderEvent
 		var book OrderEvent
 		mErr := json.Unmarshal([]byte(message), &book)
 		if mErr != nil {
-			errCallback(mErr)
+			errCallback(false, mErr)
 			return
 		}
 

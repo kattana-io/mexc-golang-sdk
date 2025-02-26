@@ -12,8 +12,8 @@ type Rest struct {
 	MarketService *mexchttpmarket.Service
 }
 
-func NewRest(ctx context.Context, mexcHttp *mexchttp.Client) (*Rest, error) {
-	marketService, err := mexchttpmarket.New(ctx, mexcHttp)
+func NewRest(ctx context.Context, mexcHTTP *mexchttp.Client) (*Rest, error) {
+	marketService, err := mexchttpmarket.New(ctx, mexcHTTP)
 	if err != nil {
 		return nil, err
 	}

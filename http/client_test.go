@@ -48,6 +48,7 @@ func TestMEXCClient_NewRequest(t *testing.T) {
 		t.Fatalf("Expected no error, but got %v", err)
 	}
 
+	//nolint:lll
 	expectedURL := "https://api.mexc.com/api/v3/account?recvWindow=5000&signature=e1009356af9025283af1fa79c5000c2a9350335e9a1818460aafb7bc3980abac&timestamp=1617785000000"
 	if req.URL.String() != expectedURL {
 		t.Errorf("Expected URL %s, but got %s", expectedURL, req.URL.String())

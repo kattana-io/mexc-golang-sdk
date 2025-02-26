@@ -19,6 +19,7 @@ const (
 
 type Status string
 
+//nolint:misspell
 const (
 	StatusNew                Status = "NEW"
 	StatusFilled             Status = "FILLED"

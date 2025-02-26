@@ -6,8 +6,8 @@ import (
 )
 
 type Subscribes struct {
-	m map[string]mexcwstypes.OnReceive
-	sync.RWMutex
+	m   map[string]mexcwstypes.OnReceive
+	mtx *sync.RWMutex
 }
 
 func NewSubs() *Subscribes {
@@ -17,22 +17,22 @@ func NewSubs() *Subscribes {
 }
 
 func (s *Subscribes) Add(req string, listener mexcwstypes.OnReceive) {
-	s.Lock()
-	defer s.Unlock()
+	s.mtx.Lock()
+	defer s.mtx.Unlock()
 
 	s.m[req] = listener
 }
 
 func (s *Subscribes) Remove(req string) {
-	s.Lock()
-	defer s.Unlock()
+	s.mtx.Lock()
+	defer s.mtx.Unlock()
 
 	delete(s.m, req)
 }
 
 func (s *Subscribes) Load(req string) (mexcwstypes.OnReceive, bool) {
-	s.RLock()
-	defer s.RUnlock()
+	s.mtx.RLock()
+	defer s.mtx.RUnlock()
 
 	v, ok := s.m[req]
 
@@ -40,14 +40,14 @@ func (s *Subscribes) Load(req string) (mexcwstypes.OnReceive, bool) {
 }
 
 func (s *Subscribes) Len() int {
-	s.RLock()
-	defer s.RUnlock()
+	s.mtx.RLock()
+	defer s.mtx.RUnlock()
 	return len(s.m)
 }
 
 func (s *Subscribes) GetAllChannels() []string {
-	s.RLock()
-	defer s.RUnlock()
+	s.mtx.RLock()
+	defer s.mtx.RUnlock()
 
 	channels := make([]string, 0)
 	for ch := range s.m {

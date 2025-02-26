@@ -15,6 +15,7 @@ import (
 
 const (
 	MaxMEXCWebSocketSubscriptions = 30
+	keepAliveInterval             = 30 * time.Second
 )
 
 type MEXCWebSocketConnection struct {
@@ -27,6 +28,7 @@ type MEXCWebSocketConnection struct {
 	readCancel    context.CancelFunc
 	ctx           context.Context
 	id            string
+	logger        *log.Logger
 }
 
 func NewMEXCWebSocketConnection(url string, errorListener mexcwstypes.OnError) *MEXCWebSocketConnection {
@@ -116,16 +118,16 @@ func (m *MEXCWebSocketConnection) reconnectLoop(ctx context.Context) {
 	case <-ctx.Done():
 		return
 	case <-time.After(23 * time.Hour):
-		log.Printf("run scheduled reconnect. id: %s", m.id)
+		m.logger.Printf("run scheduled reconnect. id: %s", m.id)
 		if err := m.reconnect(); err != nil {
-			m.ErrorListener(fmt.Errorf("schedulled reconnect error: %v", err))
+			m.ErrorListener(true, fmt.Errorf("schedulled reconnect error: %v", err))
 		}
 	}
 }
 
 // keepAlive sends a ping message to the server every 30 seconds to keep the connection alive
 func (m *MEXCWebSocketConnection) keepAlive(ctx context.Context) {
-	pingTicker := time.NewTicker(30 * time.Second)
+	pingTicker := time.NewTicker(keepAliveInterval)
 	defer pingTicker.Stop()
 
 	for {
@@ -135,7 +137,7 @@ func (m *MEXCWebSocketConnection) keepAlive(ctx context.Context) {
 		case <-pingTicker.C:
 			err := m.Send(&mexcwstypes.WsReq{Method: "PING"})
 			if err != nil {
-				m.ErrorListener(fmt.Errorf("ping error: %v", err))
+				m.ErrorListener(false, fmt.Errorf("ping error: %v", err))
 			}
 		}
 	}
@@ -161,12 +163,12 @@ func (m *MEXCWebSocketConnection) handleLoop() {
 	_, buf, err := m.Conn.ReadMessage()
 	if err != nil {
 		if websocket.IsCloseError(err, websocket.CloseNormalClosure) {
-			m.ErrorListener(fmt.Errorf("connection closed: %v", err))
+			m.ErrorListener(true, fmt.Errorf("connection closed: %v", err))
 			return
 		}
 
 		if rErr := m.reconnect(); rErr != nil {
-			m.ErrorListener(fmt.Errorf("reconnect error: %v", err))
+			m.ErrorListener(true, fmt.Errorf("reconnect error: %v", err))
 		}
 
 		log.Printf("readLoop error for id %s: %v", m.id, err)
@@ -175,10 +177,10 @@ func (m *MEXCWebSocketConnection) handleLoop() {
 
 	message := string(buf)
 
-	var update map[string]interface{}
+	var update map[string]any
 	err = json.Unmarshal(buf, &update)
 	if err != nil {
-		m.ErrorListener(fmt.Errorf("unmarshal error: %v", err))
+		m.ErrorListener(false, fmt.Errorf("unmarshal error: %v", err))
 
 		return
 	}
@@ -198,7 +200,7 @@ func (m *MEXCWebSocketConnection) handleLoop() {
 		return
 	}
 
-	log.Println(fmt.Sprintf("Unhandled for id %s: %v", m.id, update))
+	m.ErrorListener(false, fmt.Errorf("unhandled for id %s: %v", m.id, update))
 }
 
 func (m *MEXCWebSocketConnection) reconnect() error {

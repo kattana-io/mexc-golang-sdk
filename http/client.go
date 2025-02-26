@@ -50,14 +50,13 @@ func (c *Client) newRequest(ctx context.Context, method, endpoint string, params
 	}
 	reqURL.RawQuery = query.Encode()
 
-	//Генерация подписи
+	// Signature generation
 	signature := c.generateSignature(reqURL.RawQuery)
 	query.Add("signature", signature)
 
 	reqURL.RawQuery = query.Encode()
 
-	// Создание HTTP-запроса
-	req, err := http.NewRequestWithContext(ctx, method, reqURL.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, method, reqURL.String(), http.NoBody)
 	if err != nil {
 		return nil, err
 	}

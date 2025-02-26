@@ -53,7 +53,7 @@ func (s *Service) KeepAliveKey(ctx context.Context, key string) error {
 		"listenKey": key,
 		"timestamp": strconv.FormatInt(time.Now().UnixMilli(), 10),
 	}
-	_, err := s.client.SendRequest(ctx, http.MethodPost, endpoint, params)
+	_, err := s.client.SendRequest(ctx, http.MethodPut, endpoint, params)
 	return err
 }
 

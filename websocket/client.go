@@ -51,7 +51,7 @@ func (m *MEXCWebSocket) Subscribe(ctx context.Context, channel string, params ma
 		return err
 	}
 
-	if err = conn.Subscribe(channel, callback); err != nil {
+	if err := conn.Subscribe(channel, callback); err != nil {
 		return err
 	}
 
@@ -77,7 +77,8 @@ func (m *MEXCWebSocket) Unsubscribe(channel string) error {
 	return nil
 }
 
-func (m *MEXCWebSocket) getWsConnection(ctx context.Context, params map[string]string, isSubscribe bool) (*connection.MEXCWebSocketConnection, error) {
+func (m *MEXCWebSocket) getWsConnection(ctx context.Context, params map[string]string,
+	isSubscribe bool) (*connection.MEXCWebSocketConnection, error) {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
 

@@ -22,12 +22,12 @@ func (c *MEXCWebSocketConnections) Swap(i, j int) {
 	c.data[i], c.data[j] = c.data[j], c.data[i]
 }
 
-func (c *MEXCWebSocketConnections) Push(x interface{}) {
+func (c *MEXCWebSocketConnections) Push(x any) {
 	item := x.(*MEXCWebSocketConnection)
 	c.data = append(c.data, item)
 }
 
-func (c *MEXCWebSocketConnections) Pop() interface{} {
+func (c *MEXCWebSocketConnections) Pop() any {
 	old := c.data
 	n := len(old)
 	item := old[n-1]
