@@ -12,7 +12,8 @@ type Subscribes struct {
 
 func NewSubs() *Subscribes {
 	return &Subscribes{
-		m: map[string]mexcwstypes.OnReceive{},
+		m:   map[string]mexcwstypes.OnReceive{},
+		mtx: &sync.RWMutex{},
 	}
 }
 
