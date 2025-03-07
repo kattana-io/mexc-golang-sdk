@@ -9,7 +9,7 @@ import (
 
 // TradeFee https://mexcdevelop.github.io/apidocs/spot_v3_en/#query-symbol-commission
 func (s *Service) TradeFee(ctx context.Context, symbol string) (*TradeFeeResponse, error) {
-	endpoint := "api/v3/tradeFee"
+	endpoint := "/api/v3/tradeFee"
 
 	params := map[string]string{
 		"symbol": symbol,
