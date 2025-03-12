@@ -12,7 +12,8 @@ func (s *Service) TradeFee(ctx context.Context, symbol string) (*TradeFeeRespons
 	endpoint := "/api/v3/tradeFee"
 
 	params := map[string]string{
-		"symbol": symbol,
+		"symbol":    symbol,
+		"timestamp": s.getTimestamp(),
 	}
 
 	res, err := s.client.SendRequest(ctx, http.MethodGet, endpoint, params)
