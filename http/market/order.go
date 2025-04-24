@@ -4,14 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/kattana-io/mexc-golang-sdk/consts"
 	"github.com/shopspring/decimal"
 	"net/http"
 )
 
 // CreateOrder https://mexcdevelop.github.io/apidocs/spot_v3_en/#new-order
 func (s *Service) CreateOrder(ctx context.Context, req *CreateOrderRequest) (*CreateOrderResponse, error) {
-	endpoint := "/api/v3/order"
-
 	params := make(map[string]string)
 
 	params["symbol"] = req.Symbol
@@ -35,7 +34,7 @@ func (s *Service) CreateOrder(ctx context.Context, req *CreateOrderRequest) (*Cr
 		params["recvWindow"] = fmt.Sprintf("%d", *req.RecvWindow)
 	}
 
-	res, err := s.client.SendRequest(ctx, http.MethodPost, endpoint, params)
+	res, err := s.client.SendRequest(ctx, http.MethodPost, consts.EndpointOrder, params)
 	if err != nil {
 		return nil, err
 	}
