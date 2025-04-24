@@ -3,20 +3,19 @@ package mexchttpmarket
 import (
 	"context"
 	"encoding/json"
+	"github.com/kattana-io/mexc-golang-sdk/consts"
 	"github.com/shopspring/decimal"
 	"net/http"
 )
 
 // TradeFee https://mexcdevelop.github.io/apidocs/spot_v3_en/#query-symbol-commission
 func (s *Service) TradeFee(ctx context.Context, symbol string) (*TradeFeeResponse, error) {
-	endpoint := "/api/v3/tradeFee"
-
 	params := map[string]string{
 		"symbol":    symbol,
 		"timestamp": s.getTimestamp(),
 	}
 
-	res, err := s.client.SendRequest(ctx, http.MethodGet, endpoint, params)
+	res, err := s.client.SendRequest(ctx, http.MethodGet, consts.EndpointTradeFee, params)
 	if err != nil {
 		return nil, err
 	}

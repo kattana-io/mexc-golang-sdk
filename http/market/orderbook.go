@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/kattana-io/mexc-golang-sdk/consts"
 	"net/http"
 )
 
@@ -14,8 +15,6 @@ const (
 
 // OrderBook https://mexcdevelop.github.io/apidocs/spot_v3_en/#order-book
 func (s *Service) OrderBook(ctx context.Context, symbol string, limit int32) (*OrderBookResponse, error) {
-	endpoint := "/api/v3/depth"
-
 	if limit <= 0 || limit > MaxOrderBookDepth {
 		limit = DefaultOrderBookDepth
 	}
@@ -25,7 +24,7 @@ func (s *Service) OrderBook(ctx context.Context, symbol string, limit int32) (*O
 		"limit":  fmt.Sprintf("%d", limit),
 	}
 
-	res, err := s.client.SendRequest(ctx, http.MethodGet, endpoint, params)
+	res, err := s.client.SendRequest(ctx, http.MethodGet, consts.EndpointOrderBook, params)
 	if err != nil {
 		return nil, err
 	}

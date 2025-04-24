@@ -3,20 +3,19 @@ package mexchttpmarket
 import (
 	"context"
 	"encoding/json"
+	"github.com/kattana-io/mexc-golang-sdk/consts"
 	"net/http"
 	"strings"
 )
 
 // ExchangeInfo https://mexcdevelop.github.io/apidocs/spot_v3_en/#exchange-information
 func (s *Service) ExchangeInfo(ctx context.Context, symbols []string) (*ExchangeInfo, error) {
-	endpoint := "/api/v3/exchangeInfo"
-
 	params := make(map[string]string)
 	if len(symbols) > 0 {
 		params["symbols"] = strings.Join(symbols, ",")
 	}
 
-	res, err := s.client.SendRequest(ctx, http.MethodGet, endpoint, params)
+	res, err := s.client.SendRequest(ctx, http.MethodGet, consts.EndpointExchangeInfo, params)
 	if err != nil {
 		return nil, err
 	}

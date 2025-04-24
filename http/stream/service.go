@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/kattana-io/mexc-golang-sdk/consts"
 	mexchttp "github.com/kattana-io/mexc-golang-sdk/http"
 	"net/http"
 	"strconv"
@@ -26,9 +27,7 @@ func New(client *mexchttp.Client) *Service {
 // CreateListenKey create new key for user data stream
 // https://mexcdevelop.github.io/apidocs/spot_v3_en/#listen-key
 func (s *Service) CreateListenKey(ctx context.Context) (string, error) {
-	endpoint := "/api/v3/userDataStream"
-
-	res, err := s.client.SendRequest(ctx, http.MethodPost, endpoint, map[string]string{
+	res, err := s.client.SendRequest(ctx, http.MethodPost, consts.EndpointStream, map[string]string{
 		"timestamp": strconv.FormatInt(time.Now().UnixMilli(), 10),
 	})
 	if err != nil {
@@ -47,13 +46,11 @@ func (s *Service) CreateListenKey(ctx context.Context) (string, error) {
 // KeepAliveKey extends its validity for 60 minutes
 // https://mexcdevelop.github.io/apidocs/spot_v3_en/#listen-key
 func (s *Service) KeepAliveKey(ctx context.Context, key string) error {
-	endpoint := "/api/v3/userDataStream"
-
 	params := map[string]string{
 		"listenKey": key,
 		"timestamp": strconv.FormatInt(time.Now().UnixMilli(), 10),
 	}
-	_, err := s.client.SendRequest(ctx, http.MethodPut, endpoint, params)
+	_, err := s.client.SendRequest(ctx, http.MethodPut, consts.EndpointStream, params)
 	return err
 }
 
