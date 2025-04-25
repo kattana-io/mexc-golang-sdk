@@ -49,5 +49,5 @@ type CoinWithdrawInfo struct {
 	Contract                string          `json:"contract"`
 	WithdrawTips            string          `json:"withdrawTips"`
 	DepositTips             string          `json:"depositTips"`
-	NetWork                 string          `json:"netWork"`
+	NetworkSymbol           string          `json:"netWork"`
 }
