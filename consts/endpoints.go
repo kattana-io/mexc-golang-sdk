@@ -9,7 +9,7 @@ const (
 	EndpointPing                   = "/api/v3/ping"
 	EndpointTime                   = "/api/v3/time"
 	EndpointTradeFee               = "/api/v3/tradeFee"
-	EndpointUniversalTransfer      = "/api/v3/capital/sub-account/universalTransfer"
+	EndpointInternalTransfer       = "/api/v3/capital/transfer/internal"
 	EndpointWithdraw               = "/api/v3/capital/withdraw"
 	EndpointWithdrawHistory        = "/api/v3/capital/withdraw/history"
 	EndpointGetCurrencyInformation = "/api/v3/capital/config/getall"
