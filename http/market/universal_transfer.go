@@ -29,7 +29,6 @@ func (s *Service) NewUniversalTransfer(ctx context.Context, req TransferRequest)
 		"amount":          req.Amount,
 		"fromAccountType": req.FromType,
 		"toAccountType":   req.ToType,
-		"recvWindow":      fmt.Sprintf("%d", req.RecvWindow),
 		"timestamp":       s.getTimestamp(),
 	}
 
@@ -38,6 +37,9 @@ func (s *Service) NewUniversalTransfer(ctx context.Context, req TransferRequest)
 	}
 	if req.ToAccount != nil {
 		params["toAccount"] = *req.ToAccount
+	}
+	if req.RecvWindow != nil {
+		params["recvWindow"] = fmt.Sprintf("%d", req.RecvWindow)
 	}
 
 	body, err := s.client.SendRequest(ctx, http.MethodPost, consts.EndpointUniversalTransfer, params)
