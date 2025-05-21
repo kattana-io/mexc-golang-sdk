@@ -24,6 +24,11 @@ type TransferResponse struct {
 
 func (s *Service) NewUniversalTransfer(ctx context.Context, req TransferRequest) (*TransferResponse, error) {
 	// https://mexcdevelop.github.io/apidocs/spot_v3_en/#universal-transfer-for-master-account
+
+	if req.FromAccount == nil && req.ToAccount == nil {
+		return nil, fmt.Errorf("fromAccount and toAccount are empty, at least one of them must be specified")
+	}
+
 	params := map[string]string{
 		"asset":           req.Asset,
 		"amount":          req.Amount,
