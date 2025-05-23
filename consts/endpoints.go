@@ -10,6 +10,7 @@ const (
 	EndpointTime                   = "/api/v3/time"
 	EndpointTradeFee               = "/api/v3/tradeFee"
 	EndpointInternalTransfer       = "/api/v3/capital/transfer/internal"
+	EndpointUniversalTransfer      = "/api/v3/capital/sub-account/universalTransfer"
 	EndpointWithdraw               = "/api/v3/capital/withdraw"
 	EndpointWithdrawHistory        = "/api/v3/capital/withdraw/history"
 	EndpointGetCurrencyInformation = "/api/v3/capital/config/getall"
