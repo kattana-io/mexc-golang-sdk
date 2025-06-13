@@ -80,14 +80,14 @@ type TransferRecord struct {
 	Amount          string `json:"amount"`
 	FromAccountType string `json:"fromAccountType"`
 	ToAccountType   string `json:"toAccountType"`
-	FromSymbol      string `json:"fromSymbol"`
-	ToSymbol        string `json:"toSymbol"`
+	Symbol          string `json:"symbol"`
 	Status          string `json:"status"`
 	Timestamp       int64  `json:"timestamp"`
 }
 
 type TransferHistoryResponse struct {
-	Transfers []TransferRecord `json:"transfers"`
+	Result     []TransferRecord `json:"result"`
+	TotalCount int32            `json:"totalCount"`
 }
 
 func (s *Service) GetUniversalTransferHistory(ctx context.Context, req TransferHistoryRequest) (*TransferHistoryResponse, error) {
