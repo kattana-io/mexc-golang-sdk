@@ -178,15 +178,21 @@ func (m *MEXCWebSocketConnection) handleLoop() {
 
 	switch msgType {
 	case websocket.TextMessage:
-		if string(buf) == "PONG" {
-			return
-		}
 		data := make(map[string]any)
 		err := json.Unmarshal(buf, &data)
 		if err != nil {
 			m.ErrorListener(false, fmt.Errorf("unmarshal error: %v", err))
 			return
 		}
+
+		if data["msg"] == "PONG" {
+			return
+		}
+		if m.getListener(fmt.Sprintf("%s", data["msg"])) != nil {
+			// successful subscribe response
+			return
+		}
+
 		m.ErrorListener(false, fmt.Errorf("received unprocessed text message: %v", data))
 	case websocket.BinaryMessage:
 		update := &dto.PushDataV3ApiWrapper{}
