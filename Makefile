@@ -9,3 +9,8 @@ check-lint:
 dep:
 	@go mod tidy
 	@go mod download
+
+proto:
+	@docker run --platform linux/amd64 --rm -v `pwd`:/defs namely/protoc-all:1.51_1  -i ./websocket/dto/proto -d ./websocket/dto/proto -l go -o .
+
+

@@ -2,8 +2,8 @@ package mexcwsmarket
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"github.com/kattana-io/mexc-golang-sdk/websocket/dto"
 )
 
 type BookDepth int
@@ -13,38 +13,17 @@ const (
 	MidBookDepth BookDepth = 10
 	MaxBookDepth BookDepth = 20
 
-	PartialBooksDepthRequestPattern = "spot@public.limit.depth.v3.api@%s@%d"
+	PartialBooksDepthRequestPattern = "spot@public.limit.depth.v3.api.pb@%s@%d"
 )
 
-type OrderBook struct {
-	Channel string `json:"c"`
-	Data    struct {
-		Bids []struct {
-			Price  string `json:"p"`
-			Volume string `json:"v"`
-		} `json:"bids"`
-		Asks []struct {
-			Price  string `json:"p"`
-			Volume string `json:"v"`
-		} `json:"asks"`
-		Event     string `json:"e"`
-		RequestID string `json:"r"`
-	} `json:"d"`
-	Symbol    string `json:"s"`
-	Timestamp int64  `json:"t"`
-}
-
-func (s *Service) OrderBookSubscribe(ctx context.Context, symbols []string, level BookDepth, callback func(*OrderBook)) error {
-	lstnr := func(message string) {
-		var book OrderBook
-
-		err := json.Unmarshal([]byte(message), &book)
-		if err != nil {
-			fmt.Println("OrderBook callback unmarshal error:", err)
-			return
+func (s *Service) OrderBookSubscribe(ctx context.Context, symbols []string, level BookDepth, callback func(api *dto.PublicLimitDepthsV3Api)) error {
+	lstnr := func(message *dto.PushDataV3ApiWrapper) {
+		switch msg := message.Body.(type) {
+		case *dto.PushDataV3ApiWrapper_PublicLimitDepths:
+			callback(msg.PublicLimitDepths)
+		default:
+			fmt.Println("OrderBook callback unknown type:", message.Body)
 		}
-
-		callback(&book)
 	}
 
 	for _, symbol := range symbols {
