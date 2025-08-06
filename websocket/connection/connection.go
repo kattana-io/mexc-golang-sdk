@@ -172,21 +172,22 @@ func (m *MEXCWebSocketConnection) handleLoop() {
 		if rErr := m.reconnect(); rErr != nil {
 			m.ErrorListener(true, fmt.Errorf("reconnect error: %v", err))
 		}
-
 		log.Printf("readLoop error for id %s: %v", m.id, err)
 		return
 	}
 
 	switch msgType {
 	case websocket.TextMessage:
+		if string(buf) == "PONG" {
+			return
+		}
 		data := make(map[string]any)
 		err := json.Unmarshal(buf, &data)
 		if err != nil {
 			m.ErrorListener(false, fmt.Errorf("unmarshal error: %v", err))
 			return
 		}
-
-		fmt.Printf("received unprocessed text message: %v\n", data)
+		m.ErrorListener(false, fmt.Errorf("received unprocessed text message: %v", data))
 	case websocket.BinaryMessage:
 		update := &dto.PushDataV3ApiWrapper{}
 		err = proto.Unmarshal(buf, update)
@@ -203,7 +204,7 @@ func (m *MEXCWebSocketConnection) handleLoop() {
 	case websocket.PingMessage, websocket.PongMessage:
 		return
 	case websocket.CloseMessage:
-		fmt.Printf("received websocket close message: %v\n", string(buf))
+		m.ErrorListener(true, fmt.Errorf("received websocket close message: %v", string(buf)))
 	default:
 		m.ErrorListener(false, fmt.Errorf("unhandled id %s: %v", m.id, string(buf)))
 	}
