@@ -21,7 +21,7 @@ type MEXCWebSocket struct {
 // NewMEXCWebSocket returns a new MEXCWebSocket instance
 func NewMEXCWebSocket(errorListener mexcwstypes.OnError) *MEXCWebSocket {
 	return &MEXCWebSocket{
-		URL:           "wss://wbs.mexc.com/ws",
+		URL:           "wss://wbs-api.mexc.com/ws",
 		Connections:   connection.NewMEXCWebSocketConnections(),
 		ErrorListener: errorListener,
 		subscribeMap:  make(map[string]*connection.MEXCWebSocketConnection),
