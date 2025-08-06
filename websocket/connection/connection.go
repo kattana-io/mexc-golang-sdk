@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+	"github.com/kattana-io/mexc-golang-sdk/websocket/dto"
 	"github.com/kattana-io/mexc-golang-sdk/websocket/types"
+	"google.golang.org/protobuf/proto"
 	"log"
 	"sync"
 	"time"
@@ -160,7 +162,7 @@ func (m *MEXCWebSocketConnection) handleLoop() {
 		return
 	}
 
-	_, buf, err := m.Conn.ReadMessage()
+	msgType, buf, err := m.Conn.ReadMessage()
 	if err != nil {
 		if websocket.IsCloseError(err, websocket.CloseNormalClosure) {
 			m.ErrorListener(true, fmt.Errorf("connection closed: %v", err))
@@ -175,32 +177,36 @@ func (m *MEXCWebSocketConnection) handleLoop() {
 		return
 	}
 
-	message := string(buf)
+	switch msgType {
+	case websocket.TextMessage:
+		data := make(map[string]any)
+		err := json.Unmarshal(buf, &data)
+		if err != nil {
+			m.ErrorListener(false, fmt.Errorf("unmarshal error: %v", err))
+			return
+		}
 
-	var update map[string]any
-	err = json.Unmarshal(buf, &update)
-	if err != nil {
-		m.ErrorListener(false, fmt.Errorf("unmarshal error: %v", err))
+		fmt.Printf("received unprocessed text message: %v\n", data)
+	case websocket.BinaryMessage:
+		update := &dto.PushDataV3ApiWrapper{}
+		err = proto.Unmarshal(buf, update)
+		if err != nil {
+			m.ErrorListener(false, fmt.Errorf("unmarshal error: %v", err))
+			return
+		}
 
+		listener := m.getListener(update.Channel)
+		if listener != nil {
+			listener(update)
+			return
+		}
+	case websocket.PingMessage, websocket.PongMessage:
 		return
+	case websocket.CloseMessage:
+		fmt.Printf("received websocket close message: %v\n", string(buf))
+	default:
+		m.ErrorListener(false, fmt.Errorf("unhandled id %s: %v", m.id, string(buf)))
 	}
-
-	if update["msg"] == "PONG" {
-		return
-	}
-
-	if m.getListener(fmt.Sprintf("%s", update["msg"])) != nil {
-		// successful subscribe response
-		return
-	}
-
-	listener := m.getListener(fmt.Sprintf("%s", update["c"]))
-	if listener != nil {
-		listener(message)
-		return
-	}
-
-	m.ErrorListener(false, fmt.Errorf("unhandled for id %s: %v", m.id, update))
 }
 
 func (m *MEXCWebSocketConnection) reconnect() error {
