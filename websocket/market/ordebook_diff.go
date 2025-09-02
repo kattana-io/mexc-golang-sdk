@@ -9,7 +9,7 @@ import (
 const (
 	MinInterval                  = "10ms"
 	MaxInterval                  = "100ms"
-	DiffBooksDepthRequestPattern = "spot@public.arrg.depth.v3.api@%s@%s"
+	DiffBooksDepthRequestPattern = "spot@public.aggre.depth.v3.api.pb@%s@%s"
 )
 
 func (s *Service) OrderBookDiffSubscribe(ctx context.Context, symbols []string, interval string, callback func(api *dto.PublicLimitDepthsV3Api)) error {
