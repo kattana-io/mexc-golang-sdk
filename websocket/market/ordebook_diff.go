@@ -7,10 +7,12 @@ import (
 )
 
 const (
-	DiffBooksDepthRequestPattern = "spot@public.arrg.depth.v3.api@%s@%d"
+	MinInterval                  = "10ms"
+	MaxInterval                  = "100ms"
+	DiffBooksDepthRequestPattern = "spot@public.arrg.depth.v3.api@%s@%s"
 )
 
-func (s *Service) OrderBookDiffSubscribe(ctx context.Context, symbols []string, level BookDepth, callback func(api *dto.PublicLimitDepthsV3Api)) error {
+func (s *Service) OrderBookDiffSubscribe(ctx context.Context, symbols []string, interval string, callback func(api *dto.PublicLimitDepthsV3Api)) error {
 	lstnr := func(message *dto.PushDataV3ApiWrapper) {
 		switch msg := message.Body.(type) {
 		case *dto.PushDataV3ApiWrapper_PublicLimitDepths:
@@ -21,7 +23,7 @@ func (s *Service) OrderBookDiffSubscribe(ctx context.Context, symbols []string, 
 	}
 
 	for _, symbol := range symbols {
-		channel := fmt.Sprintf(DiffBooksDepthRequestPattern, symbol, level)
+		channel := fmt.Sprintf(DiffBooksDepthRequestPattern, interval, symbol)
 		if err := s.client.Subscribe(ctx, channel, nil, lstnr); err != nil {
 			return err
 		}
@@ -30,9 +32,9 @@ func (s *Service) OrderBookDiffSubscribe(ctx context.Context, symbols []string, 
 	return nil
 }
 
-func (s *Service) OrderBookDiffUnsubscribe(symbols []string, level BookDepth) error {
+func (s *Service) OrderBookDiffUnsubscribe(symbols []string, interval string) error {
 	for _, symbol := range symbols {
-		channel := fmt.Sprintf(DiffBooksDepthRequestPattern, symbol, level)
+		channel := fmt.Sprintf(DiffBooksDepthRequestPattern, interval, symbol)
 		if err := s.client.Unsubscribe(channel); err != nil {
 			return err
 		}
