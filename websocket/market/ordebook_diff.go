@@ -12,11 +12,11 @@ const (
 	DiffBooksDepthRequestPattern = "spot@public.aggre.depth.v3.api.pb@%s@%s"
 )
 
-func (s *Service) OrderBookDiffSubscribe(ctx context.Context, symbols []string, interval string, callback func(api *dto.PublicLimitDepthsV3Api)) error {
+func (s *Service) OrderBookDiffSubscribe(ctx context.Context, symbols []string, interval string, callback func(api *dto.PublicAggreDepthsV3Api)) error {
 	lstnr := func(message *dto.PushDataV3ApiWrapper) {
 		switch msg := message.Body.(type) {
-		case *dto.PushDataV3ApiWrapper_PublicLimitDepths:
-			callback(msg.PublicLimitDepths)
+		case *dto.PushDataV3ApiWrapper_PublicAggreDepths:
+			callback(msg.PublicAggreDepths)
 		default:
 			fmt.Println("OrderBook callback unknown type:", message.Body)
 		}
