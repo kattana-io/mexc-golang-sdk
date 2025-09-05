@@ -15,6 +15,7 @@ const (
 	EndpointWithdrawHistory        = "/api/v3/capital/withdraw/history"
 	EndpointGetCurrencyInformation = "/api/v3/capital/config/getall"
 	EndpointAccountInformation     = "/api/v3/account"
+	EndpointAccountTradeList       = "/api/v3/myTrades"
 
 	// Stream
 	EndpointStream = "/api/v3/userDataStream"
