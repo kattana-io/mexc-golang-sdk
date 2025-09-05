@@ -10,7 +10,7 @@ import (
 )
 
 // GetAccountTradeList https://www.mexc.com/api-docs/spot-v3/spot-account-trade#account-trade-list
-func (s *Service) GetAccountTradeList(ctx context.Context, req *GetAccountTradeListRequest) (*GetAccountTradeListResponse, error) {
+func (s *Service) GetAccountTradeList(ctx context.Context, req *GetAccountTradeListRequest) ([]*GetAccountTradeListResponse, error) {
 	params := make(map[string]string)
 
 	params["symbol"] = req.Symbol
@@ -37,13 +37,13 @@ func (s *Service) GetAccountTradeList(ctx context.Context, req *GetAccountTradeL
 		return nil, err
 	}
 
-	var response GetAccountTradeListResponse
+	var response []*GetAccountTradeListResponse
 	err = json.Unmarshal(res, &response)
 	if err != nil {
 		return nil, err
 	}
 
-	return &response, nil
+	return response, nil
 }
 
 type GetAccountTradeListRequest struct {
